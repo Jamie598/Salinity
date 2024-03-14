@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = "utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+<body>
+  <h1><a href = "Main.html" > Jamie Ishimaru </a></h1>
+  <h1><a href = "Introduction.html" > Introduction </a></h1>
+  <h1><a href = "About.html" > ABOUT </a></h1>
+  <h1> Raster mapping example </h1>
+  <h2> 1 Introduction</h2>
+  <p>This RMarkdown document describes reading a netCDF file consisting of several bioclimatic variables, and plots one of them</p>
+  <h3> 1.1 Load packages</h3>
+<p class="p1"><span class="s1"><b># load libraries</b> <span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">library(ncdf4)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">library(CFtime)<span class="Apple-converted-space"> </span></span></p>
+<p>library(lattice)</p>
+<p class="p1"><span class="s1">library(RColorBrewer)<span class="Apple-converted-space"> </span></span></p> 
+<h3> 2 Read data</h3>
+<p class="p1"><span class="s1"><b># set path and filename</b><span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">ncpath &lt;- "/Users/jamie/Desktop/salt.anal1deg.nc"<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">ncname &lt;- "salt.anal1deg.nc" ncfname &lt;- paste(ncpath, ncname, ".nc", sep="")<span class="Apple-converted-space"> </span></span></p>
+<p> class="s1">dname &lt;- "salt"</p>
+<p><b># open a netCDF file</b></p>
+<p class="p1"><span class="s1">ncin &lt;- nc_open(ncpath)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">print(ncin)<span class="Apple-converted-space"> </span></span></p>
+<p> ## 1 variables (excluding dimension variables):<br>
+  float salt[lon,lat,level,time]<br>
+      long_name: Ocean Salinity, analyzed mean, 1-deg grid, Monthly<br>
+      valid_range: 0<br>
+       valid_range: 100<br>
+      actual_range: 3.52430009841919<br>
+       actual_range: 41.4294013977051<br>
+      units: g/kg<br>
+      add_offset: 0<br>
+      scale_factor: 1<br>
+      missing_value: -9.96920996838687e+36<br>
+      var_desc: Ocean Salinity, analyzed mean<br>
+      dataset: NODC World Ocean Atlas 1998<br>
+      level_desc: Multiple Levels<br>
+      statistic: Analyzed Mean<br>
+      parent_stat: Mean<br><br>
+
+4 dimensions:<br>
+  lon  Size:360 <br>
+      units: degrees_east<br>
+      long_name: Longitude<br>
+      actual_range: 0.5<br>
+       actual_range: 359.5<br>
+      standard_name: longitude<br>
+      axis: X<br><br>
+  lat  Size:180 <br>
+      units: degrees_north<br>
+      long_name: Latitude<br>
+      actual_range: 89.5<br>
+       actual_range: -89.5<br>
+      standard_name: latitude<br>
+      axis: <br><br>
+  level  Size:24 <br>
+      units: meters<br>
+      positive: down<br>
+      long_name: Level<br>
+      actual_range: 0<br>
+       actual_range: 1500<br>
+      axis: Z<br><br>
+  time  Size:12   *** is unlimited *** <br>
+      units: days since 1-1-1 00:00:0.0<br>
+      long_name: Time<br>
+      actual_range: 0<br>
+       actual_range: 334<br>
+      delta_t: 0000-01-00 00:00:00<br>
+      avg_period: 0097-00-00 00:00:00<br>
+      prev_avg_period: 0000-01-00 00:00:00<br>
+      ltm_range: 693597<br>
+       ltm_range: 729026<br>
+      standard_name: time<br>
+      axis: T</p>
+<h3> 2.1 Longitude and Latitude</h3>
+<p class="p1"><span class="s1"><b># get longitude and latitude</b><span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">lon &lt;- ncvar_get(ncin,"lon")<span class="Apple-converted-space"> </span></span></p>
+<p>nlon &lt;- dim(lon)</p>
+<p> head(lon)</p>
+<p> ## [1] 0.5 1.5 2.5 3.5 4.5 5.5</p>
+<p class="p1"><span class="s1">lat &lt;- ncvar_get(ncin,"lat")<span class="Apple-converted-space"> </span></span></p>
+<p>nlat &lt;- dim(lat)</p>
+<p>head(lat)</p>
+<p> ## [1] 89.5 88.5 87.5 86.5 85.5 84.5</p>
+<p class="p1"><span class="s1">print(c(nlon,nlat))<span class="Apple-converted-space"> </span></span></p>
+<p> ## [1] 360 180</p>
+<h3> 2.2 Time</h3>
+<p class="p1"><span class="s1"><b># get offset time</b>
+<p> time &lt;- ncvar_get(ncin,"time")</p>
+<p> time</p>
+<p> ## [1]   0  31  59  90 120 151 181 212 243 273 304 334 </p>
+<p><b> # get tunits</b></p>
+<p class="p1"><span class="s1">tunits &lt;- ncatt_get(ncin,"time","units")<span class="Apple-converted-space"> </span></span></p>
+<p>tunits</p>
+<p> ## $hasatt<br>
+  [1] TRUE<br><br>
+  $value<br>
+  [1] "days since 1-1-1 00:00:0.0"</p>
+<p><b> # get nt</b></p>
+<p class="p1"><span class="s1">nt &lt;- dim(time)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">nt<span class="Apple-converted-space"> </span></span></p>
+<p> ## [1] 12</p>
+<h3> 2.3 Salinity array</h3>
+<p class="p1"><span class="s1">salt_array &lt;- ncvar_get(ncin,dname)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">dlname &lt;- ncatt_get(ncin,dname,"Ocean Salinity, analyzed mean, 1-deg grid, Monthly")<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">dunits &lt;- ncatt_get(ncin,dname,"units")<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">fillvalue &lt;- ncatt_get(ncin,dname,"actual_range")<span class="Apple-converted-space"> </span></span></p>
+<p><b># get dimension of salt array</b></p>
+<p class="p1"><span class="s1">dim(salt_array)<span class="Apple-converted-space"> </span></span></p>
+<p>  ## [1] 360 180  24  12</p>
+<h3> 2.4 Cf and Timestamps</h3>
+<p class="p1"><span class="s1"><b># convert time to CFtime class cf</b><span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">cf &lt;- CFtime(tunits$value, calendar = "proleptic_gregorian", time)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">timestamps &lt;- CFtimestamp(cf)<span class="Apple-converted-space"> </span></span></p>
+<p> timestamps</p>
+<p> ##  [1] "0001-01-01" "0001-02-01" "0001-03-01" "0001-04-01" "0001-05-01"<br>
+  [6] "0001-06-01" "0001-07-01" "0001-08-01" "0001-09-01" "0001-10-01"<br>
+ [11] "0001-11-01" "0001-12-01"</p>
+<p class="p1"><span class="s1"><b># get character-string times timestamps</b><span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">class(timestamps) <br><br>##<span class="Apple-converted-space"> </span></span></p>
+<p>   <pre> year month day hour minute  second    tz     offset<br>
+  <pre>  1     1     1   1    0      0      0 00:00      0<br>
+  2     1     2   1    0      0      0 00:00     31<br>
+  3     1     3   1    0      0      0 00:00     59<br>
+  4     1     4   1    0      0      0 00:00     90<br>
+  5     1     5   1    0      0      0 00:00    120<br>
+  6     1     6   1    0      0      0 00:00    151<br>
+  7     1     7   1    0      0      0 00:00    181<br>
+  8     1     8   1    0      0      0 00:00    212<br>
+  9     1     9   1    0      0      0 00:00    243<br>
+  10    1    10   1    0      0      0 00:00    273<br>
+  11    1    11   1    0      0      0 00:00    304<br>
+  12    1    12   1    0      0      0 00:00    334</p>
+<p class="p1"><span class="s1"><b> # parse the string into date components time_cf </b><span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">time_cf &lt;- CFparse(cf, timestamps)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">class(time_cf)<span class="Apple-converted-space"> </span></span></p>
+<p> ## [1] "data.frame"</p>
+<h3> 3 Plot the Data</h3>
+<p class="p1"><span class="s1"><b># levelplot of the array</b><span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">grid &lt;- expand.grid(lon=lon, lat=lat)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">cutpts &lt;- c(3.7,11.1,18.5,25.8,33.2,40.6)<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1">levelplot(salt_array ~ lon * lat, data=grid, at=cutpts, cuts=11, pretty=T, col.regions=(rev(brewer.pal(10,"RdBu"))))<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><br>
+<img src=600x300.png width="1000" height="600">
+<p class="p1"><span class="s1"><br>
+</span></p>
+<h3> 4 Discussion:</h3>
+<p class="p1"><span class="s1">The image above shows the Salinity data around the globe in 1998. 
+The dark red represents areas with high amounts of salinity, and the dark blue represents areas with low amounts of salinity in the ocean.
+The whites represent the areas that are the land and not the ocean. 
+Looking at the map, the first thing I noticed was that it looks like salinity in the water tends to be lower overall in areas that are at the top of the earth in the north. 
+My guess for this is because of the large amount of glaciers and frozen water there, the melting ice that turns into water dilutes the ocean making it less salty.
+The only two areas that did seem to have low salinity levels even though they weren't high up north was the Baltic Sea and Black Sea.
+My guess for this is because there are a lot a freshwater runoff from the surrounding land like rivers and streams that help dilute the salt in the ocean<span class="Apple-converted-space"> </span></span></p>
+</body>
+</html>
